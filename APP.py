@@ -7,7 +7,6 @@ import uvicorn
 import os
 
 # Load model
-
 model = joblib.load("stroke_pipeline_knn.pkl")
 
 class PatientData(BaseModel):
@@ -31,9 +30,9 @@ app = FastAPI()
 
 # Add CORS middleware
 origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://heart-strock-frontend.vercel.app/",  # production frontend
+    "http://localhost:3000",                    # local dev
+    "http://127.0.0.1:3000",                    # local dev
+    "https://heart-strock-frontend.vercel.app"  # deployed frontend (no trailing slash)
 ]
 
 app.add_middleware(
