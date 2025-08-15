@@ -7,8 +7,8 @@ import uvicorn
 import os
 
 # Load model
-model_path = os.environ.get("MODEL_PATH", "stroke_pipeline_knn.pkl")
-model = joblib.load(model_path)
+
+model = joblib.load("stroke_pipeline_knn.pkl")
 
 class PatientData(BaseModel):
     gender: int
