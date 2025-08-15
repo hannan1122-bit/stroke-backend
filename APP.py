@@ -4,9 +4,11 @@ from pydantic import BaseModel
 import joblib
 import pandas as pd
 import uvicorn
+import os
 
 # Load model
-model = joblib.load('stroke_pipeline_knn.pkl')
+model_path = os.environ.get("MODEL_PATH", "stroke_pipeline_knn.pkl")
+model = joblib.load(model_path)
 
 class PatientData(BaseModel):
     gender: int
@@ -19,7 +21,7 @@ class PatientData(BaseModel):
     bmi: float
     work_type_Never_worked: int
     work_type_Private: int
-    work_type_Self_employed: int   # underscore here
+    work_type_Self_employed: int
     work_type_children: int
     smoking_status_formerly_smoked: int  
     smoking_status_never_smoked: int
@@ -27,24 +29,23 @@ class PatientData(BaseModel):
 
 app = FastAPI()
 
-# Add CORS middleware to allow frontend requests
+# Add CORS middleware
 origins = [
-    "http://localhost:3000",  # your Next.js frontend URL in dev
+    "http://localhost:3000",
     "http://127.0.0.1:3000",
-    # add your deployed frontend URL if any
+    "https://YOUR-VERCEL-APP.vercel.app",  # production frontend
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,       # allow your frontend origins
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],         # allow all HTTP methods (POST, OPTIONS, etc.)
-    allow_headers=["*"],         # allow all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.post("/predict")
 def predict(data: PatientData):
-    # Map attribute names to exact model expected columns
     input_dict = {
         'gender': data.gender,
         'age': data.age,
@@ -56,16 +57,16 @@ def predict(data: PatientData):
         'bmi': data.bmi,
         'work_type_Never_worked': data.work_type_Never_worked,
         'work_type_Private': data.work_type_Private,
-        'work_type_Self-employed': data.work_type_Self_employed,  # map underscore to hyphen
+        'work_type_Self-employed': data.work_type_Self_employed,
         'work_type_children': data.work_type_children,
         'smoking_status_formerly smoked': data.smoking_status_formerly_smoked,
         'smoking_status_never smoked': data.smoking_status_never_smoked,
         'smoking_status_smokes': data.smoking_status_smokes
     }
-
     input_df = pd.DataFrame([input_dict])
     prediction = model.predict(input_df)[0]
     return {"prediction": int(prediction)}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
